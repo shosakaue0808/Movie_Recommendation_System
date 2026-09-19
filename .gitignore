@@ -8,3 +8,5 @@ __pycache__/
 #Jupyter
 .ipynb_checkpoints/
 
+#dataset
+dataset/
