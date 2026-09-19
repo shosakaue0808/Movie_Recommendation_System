@@ -16,6 +16,7 @@ data/ml-latest
 ## MovieLens Latest Small dataset
 
 | File | Description|
+| ----------- |:-----------:|
 | ratings.csv | user ratings and timestamps |
 | movies.csv | Movie titles and genres |
 | tags.csv | User-generated movie tags |
