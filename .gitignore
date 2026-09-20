@@ -2,11 +2,15 @@
 movie-reco-venv/
 
 #Python
-__pycache__/
+*__pycache__/
 *.py[cod]
+*pytest_cache
 
 #Jupyter
 .ipynb_checkpoints/
 
 #dataset
 dataset/
+
+#egginfo
+*.egg-info/
