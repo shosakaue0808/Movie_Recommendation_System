@@ -25,25 +25,3 @@ def temporal_positive_split(ratings: pd.DataFrame,
     test = sorted_positive.loc[sorted_positive['_position'] == sorted_positive['_user_count'] -1].copy()
     return(train, validation, test)
 
-ratings = pd.read_csv('dataset/ml-latest-small/ratings.csv')
-train, validation, test = temporal_positive_split(ratings=ratings)
-split_summary = pd.DataFrame({
-    "split": ["train", "validation", "test"],
-    "interactions": [
-        len(train),
-        len(validation),
-        len(test),
-    ],
-    "users": [
-        train["userId"].nunique(),
-        validation["userId"].nunique(),
-        test["userId"].nunique(),
-    ],
-    "movies": [
-        train["movieId"].nunique(),
-        validation["movieId"].nunique(),
-        test["movieId"].nunique(),
-    ],
-})
-
-print(split_summary)

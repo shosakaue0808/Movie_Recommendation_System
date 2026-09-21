@@ -42,7 +42,4 @@ class PopularityRecommender:
                 return personal_recommend
         return personal_recommend
 
-recommender = PopularityRecommender()
-ratings = pd.read_csv('dataset/ml-latest-small/ratings.csv')
-train, validation, test = temporal_positive_split(ratings=ratings)
-recommender.fit(train)
+
