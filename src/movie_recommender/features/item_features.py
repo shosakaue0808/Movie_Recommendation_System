@@ -33,7 +33,7 @@ def build_genre_features(
     
     if not catalog:
         raise ValueError("Catalog cannot be empty.")
-    catalog_movies = movies.loc[movies['movieId'].isin(catalog)].copy()
+    catalog_movies = movies.loc[movies['movieId'].isin(catalog)].copy().sort_values('movieId').reset_index(drop=True)
 
     if catalog_movies.empty:
         raise ValueError(
