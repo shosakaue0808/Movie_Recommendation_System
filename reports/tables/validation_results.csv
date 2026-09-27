@@ -1,2 +1,4 @@
-,model,k,users_evaluated,hit_rate,ndcg
-0,popularity,10,566,0.045936395759717315,0.01998717919735628
+model,split,k,users_available,users_evaluated,cold_start_users_excluded,hit_rate,ndcg
+popularity,validation,10,603,566,37,0.045936395759717315,0.01998717919735628
+genre_tag_content,validation,10,603,566,37,0.0035335689045936395,0.001063710232028202
+genre_content,validation,10,603,566,37,0.0017667844522968198,0.0007609126467727793

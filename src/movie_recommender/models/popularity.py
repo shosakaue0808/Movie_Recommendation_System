@@ -1,9 +1,8 @@
 import pandas as pd
-from movie_recommender.data.split import temporal_positive_split
 
 class PopularityRecommender:
     """
-    recommend globally popular movie that a user has not seen.
+    recommend globally popular movie that a user has not seen. 
     """
     def __init__(self):
         """
@@ -15,7 +14,8 @@ class PopularityRecommender:
 
     def fit(self, train: pd.DataFrame)->"PopularityRecommender":
         """
-        create global popularity ranking and assign list of movieIds to movie_ranking
+        create global popularity ranking and assign list of movieIds to movie_ranking.
+        popularity score is based on global count of being seen
         """
         # make popularity series with movieId as tie breaker
         popularity_score = train.groupby('movieId')['userId'].nunique().sort_index()
@@ -24,9 +24,9 @@ class PopularityRecommender:
         self.is_fitted = True
         return self
 
-    def recommend(self, seen_movies: set[int], k: int)->list[int]:
+    def recommend(self, user_id: int, seen_movies: set[int], k: int)->list[int]:
         """
-        for each user, recommend unseen k movies
+        for each user, recommend unseen global top-k movies
         """
         if not self.is_fitted:
             raise RuntimeError('Call fit() before generating recommendations')
