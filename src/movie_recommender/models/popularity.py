@@ -1,6 +1,7 @@
 import pandas as pd
+from movie_recommender.models.base_model import BaseRecommender
 
-class PopularityRecommender:
+class PopularityRecommender(BaseRecommender):
     """
     recommend globally popular movie that a user has not seen. 
     """
@@ -9,14 +10,15 @@ class PopularityRecommender:
         movie_ranking: global popularity ranking of movies
         is_fitted: flag if model is fitted
         """
+        super().__init__()
         self.movie_ranking: list[int] =[]
-        self.is_fitted = False
 
-    def fit(self, train: pd.DataFrame)->"PopularityRecommender":
+    def fit(self, train: pd.DataFrame, item_features: pd.DataFrame | None = None)->"PopularityRecommender":
         """
         create global popularity ranking and assign list of movieIds to movie_ranking.
         popularity score is based on global count of being seen
         """
+        self._validate_training_data(train)
         # make popularity series with movieId as tie breaker
         popularity_score = train.groupby('movieId')['userId'].nunique().sort_index()
         # sort series by popularity but keep movieId order when it's tie
@@ -28,11 +30,7 @@ class PopularityRecommender:
         """
         for each user, recommend unseen global top-k movies
         """
-        if not self.is_fitted:
-            raise RuntimeError('Call fit() before generating recommendations')
-
-        if k <= 0:
-            raise ValueError("rank needs to be positive")
+        self._validate_recommendation_request(k)
 
         personal_recommend = []
         for movieId in self.movie_ranking:

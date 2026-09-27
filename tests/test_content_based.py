@@ -38,11 +38,25 @@ def test_fit_creates_user_profiles(
         sample_features,
     )
 
-    assert set(model.user_profiles) == {1, 2}
-    assert model.user_profiles[1].tolist() == [1.0, 0.0]
-    assert model.user_profiles[2].tolist() == [0.0, 1.0]
+    assert set(model.user_profiles.index) == {1, 2}
 
+    assert set(model.user_profiles.columns) == {
+        "feature_action",
+        "feature_drama",
+    }
 
+    assert model.user_profiles.loc[1].tolist() == [
+        1.0,
+        0.0,
+    ]
+
+    assert model.user_profiles.loc[2].tolist() == [
+        0.0,
+        1.0,
+    ]
+
+    assert model.is_fitted
+    
 def test_recommend_ranks_similar_movie_first(
     sample_train: pd.DataFrame,
     sample_features: pd.DataFrame,

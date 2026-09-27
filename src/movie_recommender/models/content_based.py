@@ -2,72 +2,70 @@ import numpy as np
 import pandas as pd
 
 from sklearn.metrics.pairwise import cosine_similarity
+from movie_recommender.models.base_model import BaseRecommender
 
 REQUIRED_TRAIN_COLUMNS = {'userId', 'movieId'}
 
-class ContentBasedRecommender:
+class ContentBasedRecommender(BaseRecommender):
     """
     Recommend movies similar to a user's liked training movies.
     """
 
     def __init__(self):
-        self.item_features: pd.DataFrame # features matrix (genre, tags, combined)
-        self.user_profiles: dict[int, np.ndarray] = {}
-        self.is_fitted = False
+        super().__init__()
+        self.item_features = pd.DataFrame() # features matrix (genre, tags, combined)
+        self.user_profiles = pd.DataFrame()
 
     def fit(self, train: pd.DataFrame, item_features: pd.DataFrame) -> "ContentBasedRecommender":
         """
         Build user profiles by averaging liked-movie vectors.
         """
-        missing_columns = REQUIRED_TRAIN_COLUMNS - set(train.columns)
-
-        if missing_columns:
+        self._validate_training_data(train)
+        if item_features is None:
             raise ValueError(
-                f"Training data is missing columns: "
-                f"{sorted(missing_columns)}"
+                "item_features is required for "
+                "ContentBasedRecommender."
             )
 
         if item_features.empty:
-            raise ValueError("Item features cannot be empty.")
-
-        if not item_features.index.is_unique:
             raise ValueError(
-                "Item-feature index must contain unique movie IDs."
+                "Item features cannot be empty."
             )
 
-        if item_features.isna().any().any():
+        self.item_features = item_features.copy()
+        self.item_features.index = (
+            self.item_features.index.astype(int)
+        )
+
+        if self.item_features.index.has_duplicates:
+            raise ValueError(
+                "Item feature index contains duplicate movie IDs."
+            )
+
+        if self.item_features.isna().any().any():
             raise ValueError(
                 "Item features cannot contain missing values."
             )
 
-        training_movie_ids = set(
-            train["movieId"].astype(int)
+        self.item_features = self.item_features.astype(
+            np.float32
         )
 
-        feature_movie_ids = set(
-            item_features.index.astype(int)
-        )
+        filtered_train = train.loc[
+            train["movieId"].isin(self.item_features.index)
+        ].copy()
 
-        missing_movies = (
-            training_movie_ids - feature_movie_ids
-        )
-
-        if missing_movies:
+        if filtered_train.empty:
             raise ValueError(
-                "Some training movies are missing item features: "
-                f"{sorted(missing_movies)[:10]}"
+                "No training movies have corresponding "
+                "item features."
             )
 
-        self.item_features = (
-            item_features
-            .copy()
-            .sort_index()
-            .astype(np.float32)
-        )
+        user_profiles: dict[int, np.ndarray] = {}
 
-        self.user_profiles = {}
-
-        for user_id, user_interactions in train.groupby("userId"):
+        for user_id, user_interactions in filtered_train.groupby(
+            "userId"
+        ):
             liked_movie_ids = (
                 user_interactions["movieId"]
                 .astype(int)
@@ -78,71 +76,66 @@ class ContentBasedRecommender:
                 liked_movie_ids
             ]
 
-            user_profile = (
+            user_profiles[int(user_id)] = (
                 liked_movie_features
                 .mean(axis=0)
-                .to_numpy(dtype=np.float32)
+                .to_numpy()
             )
 
-            self.user_profiles[int(user_id)] = user_profile
+        self.user_profiles = pd.DataFrame.from_dict(
+            user_profiles,
+            orient="index",
+            columns=self.item_features.columns,
+        )
+
+        self.user_profiles.index.name = "userId"
 
         self.is_fitted = True
-
         return self
     
+
     def recommend(
         self,
         user_id: int,
         seen_movies: set[int],
         k: int,
-        ) -> list[int]:
-        """Return top-K unseen movies ranked by cosine similarity."""
+    ) -> list[int]:
+        """Rank unseen movies by cosine similarity."""
 
-        if not self.is_fitted or self.item_features is None:
-            raise RuntimeError(
-                "Call fit() before generating recommendations."
-            )
+        self._validate_recommendation_request(k)
 
-        if k <= 0:
-            raise ValueError("k must be positive.")
-
-        if user_id not in self.user_profiles:
+        if user_id not in self.user_profiles.index:
             raise ValueError(
-                f"No profile is available for user {user_id}."
+                f"User {user_id} does not have a "
+                "training profile."
             )
 
-        candidate_movie_ids = [
-            int(movie_id)
-            for movie_id in self.item_features.index
-            if movie_id not in seen_movies
+        candidate_movie_ids = self.item_features.index[
+            ~self.item_features.index.isin(seen_movies)
         ]
 
-        if not candidate_movie_ids:
+        if len(candidate_movie_ids) == 0:
             return []
-
-        user_profile = self.user_profiles[user_id]
-
-        if np.linalg.norm(user_profile) == 0:
-            raise ValueError(
-                f"User {user_id} has a zero feature profile."
-            )
 
         candidate_features = self.item_features.loc[
             candidate_movie_ids
         ]
 
+        # Double brackets preserve a two-dimensional DataFrame.
+        user_profile = self.user_profiles.loc[[user_id]]
+
         similarity_scores = cosine_similarity(
-            user_profile.reshape(1, -1),
+            user_profile,
             candidate_features,
-        ).ravel()
+        )[0]
 
         ranking = pd.DataFrame({
-            "movieId": candidate_movie_ids,
-            "score": similarity_scores,
+            "movieId": candidate_movie_ids.astype(int),
+            "similarity": similarity_scores,
         })
 
         ranking = ranking.sort_values(
-            ["score", "movieId"],
+            by=["similarity", "movieId"],
             ascending=[False, True],
         )
 

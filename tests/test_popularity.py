@@ -26,7 +26,7 @@ def test_recommend_removes_seen_movies() -> None:
     train = make_training_data()
     model = PopularityRecommender().fit(train)
 
-    recommendations = model.recommend(
+    recommendations = model.recommend(user_id=1,
         seen_movies={10},
         k=2,
     )
@@ -38,7 +38,7 @@ def test_recommend_requires_fit() -> None:
     model = PopularityRecommender()
 
     with pytest.raises(RuntimeError):
-        model.recommend(seen_movies=set(), k=2)
+        model.recommend(user_id=1, seen_movies=set(), k=2)
 
 
 def test_k_must_be_positive() -> None:
@@ -46,4 +46,4 @@ def test_k_must_be_positive() -> None:
     model = PopularityRecommender().fit(train)
 
     with pytest.raises(ValueError):
-        model.recommend(seen_movies=set(), k=0)
+        model.recommend(user_id=1, seen_movies=set(), k=0)

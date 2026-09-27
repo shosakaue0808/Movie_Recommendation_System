@@ -5,9 +5,10 @@ from movie_recommender.evaluation.metrics import (
     ndcg_k,
 )
 
+from movie_recommender.models.base_model import BaseRecommender
 
 def evaluate_model(
-    model,
+    model: BaseRecommender,
     model_name: str,
     train: pd.DataFrame,
     evaluation: pd.DataFrame,  # set of movies for each user tested on, assumed to be relevant
