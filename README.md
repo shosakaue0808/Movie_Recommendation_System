@@ -1,6 +1,7 @@
 # Movie_Recommendation_System
-end-to-end movie recommendation system using MovieLens, comparing popularity, content-based, matrix factorization, and two-tower models. Evaluates accuracy and diversity and serves personalized recommendation through web app.
+A reproducible top-K movie recommendation pipeline built with Python and the MovieLens Latest Small dataset. The project currently compares popularity, content-based, and hybrid recommenders using a shared temporal evaluation framework.
 
+Matrix factorization, two-tower retrieval, additional diversity analysis, and application deployment are planned extensions.
 # Data 
 This project uses the MovieLens Latest Small dataset and original dataset from GroupLens.
 Citation:
